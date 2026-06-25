@@ -1,5 +1,7 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./db');
 const quizRoutes = require('./routes/quiz');
 
 const app = express();
@@ -14,8 +16,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Quiz API is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message);
+    process.exit(1);
+  });
 
 module.exports = app;

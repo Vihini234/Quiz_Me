@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Score = require('../models/Score');
 
 const questions = [
   {
@@ -69,21 +70,19 @@ const questions = [
   },
 ];
 
-// In-memory leaderboard (replace with a DB in production)
-const scores = [];
-
 // GET /api/quiz/questions — returns questions without answers
 router.get('/questions', (req, res) => {
-  const safeQuestions = questions.map(({ id, question, options }) => ({
+  const safeQuestions = questions.map(({ id, question, options, answer }) => ({
     id,
     question,
     options,
+    correctAnswer: answer,
   }));
   res.json({ questions: safeQuestions, timePerQuestion: 15 });
 });
 
-// POST /api/quiz/submit — validates answers and returns result
-router.post('/submit', (req, res) => {
+// POST /api/quiz/submit — validates answers and saves score to MongoDB
+router.post('/submit', async (req, res) => {
   const { answers, playerName } = req.body;
 
   if (!answers || !Array.isArray(answers)) {
@@ -109,8 +108,7 @@ router.post('/submit', (req, res) => {
   const score = Math.round((correct / questions.length) * 100);
 
   if (playerName) {
-    scores.push({ playerName, score, correct, date: new Date().toISOString() });
-    scores.sort((a, b) => b.score - a.score);
+    await Score.create({ playerName, score, correct, total: questions.length });
   }
 
   res.json({
@@ -121,9 +119,13 @@ router.post('/submit', (req, res) => {
   });
 });
 
-// GET /api/quiz/leaderboard
-router.get('/leaderboard', (req, res) => {
-  res.json({ leaderboard: scores.slice(0, 10) });
+// GET /api/quiz/leaderboard — top 10 all-time scores from MongoDB
+router.get('/leaderboard', async (req, res) => {
+  const leaderboard = await Score.find()
+    .sort({ score: -1, date: -1 })
+    .limit(10)
+    .select('playerName score correct total date -_id');
+  res.json({ leaderboard });
 });
 
 module.exports = router;
