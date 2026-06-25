@@ -4,7 +4,7 @@ import Timer from '../components/Timer';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
-export default function QuizScreen({ questions, timePerQuestion, onFinish }) {
+export default function QuizScreen({ questions, timePerQuestion, onFinish, onLogout }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
   const [revealed, setRevealed] = useState(false);
