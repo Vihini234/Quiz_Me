@@ -7,5 +7,6 @@ const scoreSchema = new mongoose.Schema({
   total:   { type: Number, required: true },
   date:    { type: Date,   default: Date.now },
 });
+//This should have being line by line
 
 module.exports = mongoose.model('Score', scoreSchema);
